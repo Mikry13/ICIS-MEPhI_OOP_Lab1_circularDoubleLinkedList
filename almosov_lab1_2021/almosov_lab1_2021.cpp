@@ -27,7 +27,6 @@ char* getWord();
 void printOut(node* _node, bool reverse = false, char format = ' ');
 
 node** searchForNode(node* _node, char* data);
-
 //
 // other functions //
 //
@@ -50,8 +49,11 @@ int main()
 
 	word = getWord();
 	node** foundIters = searchForNode(_first, word);
-	for (int i = 0; foundIters[i] != NULL; i++)
-	printf("%p\n", foundIters[i]);
+	for (int i = 0;; i++) {
+		if (foundIters[i] == NULL)
+			break;
+		printf("%p\n", foundIters[i]);
+	}
 
 	printOut(_first, true);
 
@@ -82,9 +84,8 @@ char* getWord() {
 		if (*length + 1 > *memory_size) { //"+1" because we need extra character to text kind of "EOF", but for our string, - '\0'
 
 			temp_string = new char[(*memory_size) * 2]; //// ? C26451 ? ////
-			for (int i = 0; i < *memory_size; i++) {
-				temp_string[i] = string[i]; // moving current string to the next 
-			}
+			for (int i = 0; i < *memory_size; i++)
+				temp_string[i] = string[i]; // moving current string to the next
 
 			delete[] string; //deallocating previous string
 			string = temp_string; //updating string pointer
@@ -96,9 +97,8 @@ char* getWord() {
 	
 	//It's possible the situation when u have almost twice memory than needed, so we deallocating this excess memory
 	temp_string = new char[*length]; //last symbol always will be the '\n' or ' ' and doesnt save into array, so we can not increase length by 1.
-	for (int i = 0; i < *length; i++) {
+	for (int i = 0; i < *length; i++)
 		temp_string[i] = string[i];
-	}
 
 	delete[] string; //deallocating previous string
 	string = temp_string; //updating string pointer
@@ -258,34 +258,37 @@ void printOut(node* _node, bool reverse, char format) {
 }
 
 node** searchForNode(node* _node, char* data) {
-	int amount = 0;
-	int i = 0;
+	int* length = new int { 0 };
 
-	int* mem_size = new int{ 2 };
+	int* memory_size = new int{ 2 };
 
-	node** found = new node * [*mem_size];
+	node** found = new node * [*memory_size];
+	node** temp_array = NULL;
 
 	node* iter = _node;
-	while (iter->next != NULL) {
-		i++;
+	do{
 		if (strcmp(_node->data, iter->data) == 0) {
-			found[amount++] = iter;
-			printf("#%d | Amount %d | ADR: %p |\n", i, amount, found[amount]);
-			if (amount >= *mem_size) {
-				*mem_size *= 2;
-				found = (node**)realloc(found, *mem_size);
+			found[(*length)++] = iter;
+			if (*length >= *memory_size) {
+				temp_array = new node*[(*memory_size) * 2];
+				for (int i = 0; i < *memory_size; i++)
+					temp_array[i] = found[i]; // moving current array to the next, with more space
+
+				delete[] found; //deallocating previous array
+				found = temp_array; //updating array pointer
+
+				*memory_size *= 2; //increasing memory twice
 			}
 		}
 		iter = iter->next;
-	}
-	found[amount] = NULL;
+	} while (iter != _node);
 
-	while (f != NULL)
-	{
-		f = found[i];
-		printf("%d: %p\n", i, *f);
-		i++;
+	temp_array = new node* [(*length)];
+	for (int i = 0; i < *length; i++)
+		temp_array[i] = found[i];
+	found[*length] = NULL; //last is NULL
 
-	}
+	delete(length);
+	delete(memory_size);
 	return found;
 }
