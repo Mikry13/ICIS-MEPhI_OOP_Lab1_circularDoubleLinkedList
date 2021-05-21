@@ -30,3 +30,15 @@
 *.exe
 *.out
 *.app
+
+almosov_lab1_2021/almosov_lab1_2021.sln
+
+almosov_lab1_2021/.vs/
+
+almosov_lab1_2021/x64/
+
+almosov_lab1_2021/almosov_lab1_2021.vcxproj
+
+almosov_lab1_2021/almosov_lab1_2021.vcxproj.filters
+
+almosov_lab1_2021/almosov_lab1_2021.vcxproj.user
