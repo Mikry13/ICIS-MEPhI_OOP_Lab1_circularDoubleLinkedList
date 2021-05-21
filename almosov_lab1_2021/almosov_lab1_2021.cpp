@@ -23,6 +23,7 @@ void pushForward(node** first_node, char* data);
 void pushNodeBack(node** _node, char* data);
 void pushNodeForward(node** _node, char* data);
 
+char* getWord();
 void printOut(node* _node, bool reverse = false, char format = ' ');
 
 node** searchForNode(node* _node, char* data);
@@ -63,34 +64,45 @@ char* getWord() {
 
 	int* memory_size = new int{ 8 }; //default amount of characters to allocate for string.
 
-	char* string = new char[*memory_size]; //pointer to the start of a string //c6280 on realloc
-	//char* string = (char*)malloc(sizeof(char) * (memory_size + 1)); //C6308 on realloc
+	char* string = new char[*memory_size]; //pointer to the start of a string
+	char* temp_string = NULL;
 
 	char current_char = getchar(); //reading the first character
 
 	 // reading characters until word is over //
-	while (current_char != '\n' && current_char != ' ') {
-		string[(*length)++] = current_char; //adding character to a string
+	while (current_char != '\n' && current_char != ' ') { //someone said space must be the word, so commented.
+		string[(*length)++] = current_char; //adding character to a string, increasing length
 
 		// if the length changed over "memory_size", increasing "memory_size" //
-		if (*length + 1 > *memory_size) { //"=" because we need extra character to text kind of "EOF", but for our string.
+		if (*length + 1 > *memory_size) { //"+1" because we need extra character to text kind of "EOF", but for our string, - '\0'
+
+			temp_string = new char[(*memory_size) * 2]; //// ? C26451 ? ////
+			for (int i = 0; i < *memory_size; i++) {
+				temp_string[i] = string[i]; // moving current string to the next 
+			}
+
+			delete[] string; //deallocating previous string
+			string = temp_string; //updating string pointer
+
 			*memory_size *= 2; //increasing memory twice
-			string = (char*)realloc(string, *memory_size * sizeof(char)); // recreating string with twice the memory
-			//NOTE: | "realloc()" can move memory block with a new size to the new place			|
-			//		| if it cant fully allocate it after given pointer. So there're no memory leak!	|
-			//		| (means we dont need to free memory ourselves)									|
 		}
 		current_char = getchar(); //reading the next character
 	}
-	string[*length] = '\0'; // kind of "EOF", but for our string.
+	
+	//It's possible the situation when u have almost twice memory than needed, so we deallocating this excess memory
+	temp_string = new char[*length]; //last symbol always will be the '\n' or ' ' and doesnt save into array, so we can not increase length by 1.
+	for (int i = 0; i < *length; i++) {
+		temp_string[i] = string[i];
+	}
 
-	/* /// doesn't work! ///
-	char* temp;
-	for (int i = *length + 1; i < *memory_size + 1; i++) //getting rid of excess memory if there're so
-		free(&string[i]);
-	*/
+	delete[] string; //deallocating previous string
+	string = temp_string; //updating string pointer
+
+	string[*length] = '\0'; // kind of "EOF", but for our string. //// ? C6386 ? ////
 
 	delete(length);
+	delete(memory_size);
+
 	return string;
 }
 
