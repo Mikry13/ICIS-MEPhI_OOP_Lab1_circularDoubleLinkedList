@@ -95,16 +95,17 @@ char* getWord() {
 	}
 	
 	//It's possible the situation when u have almost twice memory than needed, so we deallocating this excess memory
-	temp_string = new char[*length]; //last symbol always will be the '\n' or ' ' and doesnt save into array, so we can not increase length by 1.
+	*length += 1; //insted of last symbol '\n' or ' ', we will add '\0' as the end of string
+	temp_string = new char[*length];
 
-	for (int i = 0; i < *length; i++) {
+	for (int i = 0; i < *length - 1; i++) {
 		temp_string[i] = string[i];
 	}
 
 	delete[] string; //deallocating previous string
 	string = temp_string; //updating string pointer
 
-	string[*length] = '\0'; // kind of "EOF", but for our string. //// ? C6386 ? ////
+	string[*length - 1] = '\0'; // kind of "EOF", but for our string.
 
 	delete(length);
 	delete(memory_size);
@@ -284,7 +285,7 @@ node** searchForNode(node* _node, char* data) {
 		iter = iter->next;
 	} while (iter != _node);
 
-	temp_array = new node* [(*length)];
+	temp_array = new node* [(*length) + 1];
 	for (int i = 0; i < *length; i++)
 		temp_array[i] = found[i];
 	found[*length] = NULL; //last is NULL
