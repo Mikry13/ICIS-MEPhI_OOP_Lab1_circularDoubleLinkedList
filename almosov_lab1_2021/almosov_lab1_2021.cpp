@@ -75,11 +75,11 @@ char* getWord() {
 	char current_char = getchar(); //reading the first character
 
 	 // reading characters until word is over //
-	while (current_char != '\n' && current_char != ' ') { //someone said space must be the word, so commented.
+	while (current_char != '\n' /*&& current_char != ' '*/) { //someone said space must be the word, so commented.
 		string[(*length)++] = current_char; //adding character to a string, increasing length
 
 		// if the length changed over "memory_size", increasing "memory_size" //
-		if (*length + 1 > *memory_size) { //"+1" because we need extra character to text kind of "EOF", but for our string, - '\0'
+		if (*length > *memory_size) { // not "*length + 1", becuase end of string '\0' added after memory reallocation after loop
 
 			temp_string = new char[(*memory_size) * 2]; //// ? C26451 ? ////
 			for (int i = 0; i < *memory_size; i++)
@@ -94,14 +94,15 @@ char* getWord() {
 	}
 	
 	//It's possible the situation when u have almost twice memory than needed, so we deallocating this excess memory
+	*length += 1;
 	temp_string = new char[*length]; //last symbol always will be the '\n' or ' ' and doesnt save into array, so we can not increase length by 1.
-	for (int i = 0; i < *length; i++)
+	for (int i = 0; i < *length - 1; i++)
 		temp_string[i] = string[i];
 
 	delete[] string; //deallocating previous string
 	string = temp_string; //updating string pointer
 
-	string[*length] = '\0'; // kind of "EOF", but for our string. //// ? C6386 ? ////
+	string[*length - 1] = '\0'; // kind of "EOF", but for our string. //// ? C6386 ? ////
 
 	delete(length);
 	delete(memory_size);
@@ -265,7 +266,7 @@ node** searchForNode(node* _node, char* data) {
 
 	node* iter = _node;
 	do{
-		if (strcmp(_node->data, iter->data) == 0) {
+		if (strcmp(data, iter->data) == 0) {
 			found[(*length)++] = iter;
 			if (*length >= *memory_size) {
 				temp_array = new node*[(*memory_size) * 2];
@@ -290,7 +291,6 @@ node** searchForNode(node* _node, char* data) {
 	delete(memory_size);
 	return found;
 }
-
 
 void nodePointerArrayOutput(node** array) {
 	for (int i = 0;; i++) {
