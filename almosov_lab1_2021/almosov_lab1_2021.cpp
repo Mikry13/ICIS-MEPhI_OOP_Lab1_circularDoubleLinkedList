@@ -82,14 +82,9 @@ char* getWord() {
 		if (*length + 1 > *memory_size) { //"+1" because we need extra character to text kind of "EOF", but for our string, - '\0'
 
 			temp_string = new char[(*memory_size) * 2]; //// ? C26451 ? ////
-<<<<<<< HEAD
 			for (int i = 0; i < *memory_size; i++) {
 				temp_string[i] = string[i]; // moving current string to the next 
 			}
-=======
-			for (int i = 0; i < *memory_size; i++)
-				temp_string[i] = string[i]; // moving current string to the next
->>>>>>> test
 
 			delete[] string; //deallocating previous string
 			string = temp_string; //updating string pointer
@@ -101,14 +96,10 @@ char* getWord() {
 	
 	//It's possible the situation when u have almost twice memory than needed, so we deallocating this excess memory
 	temp_string = new char[*length]; //last symbol always will be the '\n' or ' ' and doesnt save into array, so we can not increase length by 1.
-<<<<<<< HEAD
+
 	for (int i = 0; i < *length; i++) {
 		temp_string[i] = string[i];
 	}
-=======
-	for (int i = 0; i < *length; i++)
-		temp_string[i] = string[i];
->>>>>>> test
 
 	delete[] string; //deallocating previous string
 	string = temp_string; //updating string pointer
