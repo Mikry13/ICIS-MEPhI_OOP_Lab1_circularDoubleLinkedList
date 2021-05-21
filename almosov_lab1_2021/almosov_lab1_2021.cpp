@@ -27,6 +27,8 @@ char* getWord();
 void printOut(node* _node, bool reverse = false, char format = ' ');
 
 node** searchForNode(node* _node, char* data);
+
+void nodePointerArrayOutput(node** array);
 //
 // other functions //
 //
@@ -49,11 +51,7 @@ int main()
 
 	word = getWord();
 	node** foundIters = searchForNode(_first, word);
-	for (int i = 0;; i++) {
-		if (foundIters[i] == NULL)
-			break;
-		printf("%p\n", foundIters[i]);
-	}
+	nodePointerArrayOutput(foundIters);
 
 	printOut(_first, true);
 
@@ -291,4 +289,13 @@ node** searchForNode(node* _node, char* data) {
 	delete(length);
 	delete(memory_size);
 	return found;
+}
+
+
+void nodePointerArrayOutput(node** array) {
+	for (int i = 0;; i++) {
+		if (array[i] == NULL)
+			break;
+		printf("| %d | ADR: %p | DATA: %s |\n", i + 1, array[i], array[i]->data);
+	}
 }
