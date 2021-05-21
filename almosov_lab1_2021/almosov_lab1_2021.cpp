@@ -48,6 +48,11 @@ int main()
 	}
 	printf("\nfind:");
 
+	word = getWord();
+	node** foundIters = searchForNode(_first, word);
+	for (int i = 0; foundIters[i] != NULL; i++)
+	printf("%p\n", foundIters[i]);
+
 	printOut(_first, true);
 
 	return 0;
@@ -250,4 +255,37 @@ void printOut(node* _node, bool reverse, char format) {
 		printf("%s%c", iter->data, format);
 		
 	}
+}
+
+node** searchForNode(node* _node, char* data) {
+	int amount = 0;
+	int i = 0;
+
+	int* mem_size = new int{ 2 };
+
+	node** found = new node * [*mem_size];
+
+	node* iter = _node;
+	while (iter->next != NULL) {
+		i++;
+		if (strcmp(_node->data, iter->data) == 0) {
+			found[amount++] = iter;
+			printf("#%d | Amount %d | ADR: %p |\n", i, amount, found[amount]);
+			if (amount >= *mem_size) {
+				*mem_size *= 2;
+				found = (node**)realloc(found, *mem_size);
+			}
+		}
+		iter = iter->next;
+	}
+	found[amount] = NULL;
+
+	while (f != NULL)
+	{
+		f = found[i];
+		printf("%d: %p\n", i, *f);
+		i++;
+
+	}
+	return found;
 }
