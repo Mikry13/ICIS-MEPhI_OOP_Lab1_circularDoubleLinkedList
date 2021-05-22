@@ -3,7 +3,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-typedef struct node{ //we don't need to type "struct" to define a value, so it should be no name here, BUT
+typedef struct node { //we don't need to type "struct" to define a value, so it should be no name here, BUT
 	char* data;
 	node* next = NULL; //next node
 	node* prev = NULL; //prev node
@@ -16,24 +16,32 @@ typedef struct node{ //we don't need to type "struct" to define a value, so it s
 node* createNode(char* data);
 
 void deleteNode(node** _node, bool returnNext = true);
-void deleteList(node** _node);
+void deleteList(node** _list);
 
 void pushBack(node** first_node, char* data);
 void pushForward(node** first_node, char* data);
 void pushNodeBack(node** _node, char* data);
 void pushNodeForward(node** _node, char* data);
 
+//input//
+
 char* getWord();
+
+//output//
+
 void printOut(node* _node, bool reverse = false, char format = ' ');
+void nodePointerArrayOutput(node** array);
+
+//algos//
 
 node** searchForNode(node* _node, char* data);
+void sortList(node* _list);
+void deleteDuplicates(node* _list);
+int countElements(node* _list);
 
-void nodePointerArrayOutput(node** array);
-//
-// other functions //
-//
+//other//
 
-char* getWord();
+void nodePointerArrayDelete(node** array);
 
 //
 // main //
@@ -50,11 +58,17 @@ int main()
 	printf("\nfind:");
 
 	word = getWord();
+
 	node** foundIters = searchForNode(_first, word);
 	nodePointerArrayOutput(foundIters);
 
-	printOut(_first, true);
+	nodePointerArrayDelete(foundIters);
+	_first = foundIters[0];
 
+	deleteDuplicates(_first);
+
+	printOut(_first, true);
+	printf("\n%d", countElements(_first));
 	return 0;
 }
 
@@ -64,7 +78,7 @@ int main()
 
 //Returns a string from console input
 char* getWord() {
-	
+
 	int* length = new int{ 0 }; //string length (also used as iterator gradually increased to the size of string later)
 
 	int* memory_size = new int{ 8 }; //default amount of characters to allocate for string.
@@ -92,7 +106,7 @@ char* getWord() {
 		}
 		current_char = getchar(); //reading the next character
 	}
-	
+
 	//It's possible the situation when u have almost twice memory than needed, so we deallocating this excess memory
 	*length += 1;
 	temp_string = new char[*length]; //last symbol always will be the '\n' or ' ' and doesnt save into array, so we can not increase length by 1.
@@ -153,10 +167,10 @@ void deleteNode(node** _node, bool returnNext) {
 }
 
 //Deletes full list
-void deleteList(node** _node) {
+void deleteList(node** _list) {
 	//we need to change actual pointer that goes from higher function so we have pointer to a pointer in arguments
-	while (*_node != NULL)
-		deleteNode(_node);
+	while (*_list != NULL)
+		deleteNode(_list);
 }
 
 //Adds node to the end of a list
@@ -227,8 +241,8 @@ void pushNodeForward(node** _node, char* data) {
 		new_node->next = *_node;
 		new_node->prev = (*_node)->prev;
 
-		(*_node)->prev->next= new_node;
-		(*_node)->prev= new_node;
+		(*_node)->prev->next = new_node;
+		(*_node)->prev = new_node;
 	}
 }
 
@@ -237,7 +251,7 @@ void printOut(node* _node, bool reverse, char format) {
 	node* iter = _node; //because list is circular, we need to have an iterator to know if we went through the list
 	if (_node == NULL)
 		return;
-	else if (reverse){
+	else if (reverse) {
 		_node = _node->prev;
 		iter = _node;
 		while (iter->prev != _node) {
@@ -252,12 +266,12 @@ void printOut(node* _node, bool reverse, char format) {
 			iter = iter->next;
 		}
 		printf("%s%c", iter->data, format);
-		
+
 	}
 }
 
 node** searchForNode(node* _node, char* data) {
-	int* length = new int { 0 };
+	int* length = new int{ 0 };
 
 	int* memory_size = new int{ 2 };
 
@@ -265,11 +279,11 @@ node** searchForNode(node* _node, char* data) {
 	node** temp_array = NULL;
 
 	node* iter = _node;
-	do{
+	do {
 		if (strcmp(data, iter->data) == 0) {
 			found[(*length)++] = iter;
 			if (*length >= *memory_size) {
-				temp_array = new node*[(*memory_size) * 2];
+				temp_array = new node * [(*memory_size) * 2];
 				for (int i = 0; i < *memory_size; i++)
 					temp_array[i] = found[i]; // moving current array to the next, with more space
 
@@ -282,7 +296,7 @@ node** searchForNode(node* _node, char* data) {
 		iter = iter->next;
 	} while (iter != _node);
 
-	temp_array = new node* [(*length)];
+	temp_array = new node * [(*length)];
 	for (int i = 0; i < *length; i++)
 		temp_array[i] = found[i];
 	found[*length] = NULL; //last is NULL
@@ -292,10 +306,52 @@ node** searchForNode(node* _node, char* data) {
 	return found;
 }
 
+void nodePointerArrayDelete(node** array) {
+	for (int i = 0;; i++) {
+		if (array[i] == NULL)
+			break;
+		deleteNode(&array[i]);
+	}
+}
+
 void nodePointerArrayOutput(node** array) {
 	for (int i = 0;; i++) {
 		if (array[i] == NULL)
 			break;
-		printf("| %d | ADR: %p | DATA: %s |\n", i + 1, array[i], array[i]->data);
+		printf("| #%d | %s |\n", i + 1, array[i]->data);
 	}
+}
+
+void sortList(node* _list) {
+
+}
+
+void deleteDuplicates(node* _list) {
+	node* iter = _list;
+	node* jter;
+	do {
+		jter = iter->next;
+		while (jter != iter) {
+			printf("I:%s J:%s\n", iter->data, jter->data);
+
+			if (strcmp(iter->data, jter->data) == 0)
+			{
+				deleteNode(&jter);
+				continue;
+			}
+			jter = jter->next;
+		}
+		printf("\n");
+		iter = iter->next;
+	} while (iter != _list);
+}
+
+int countElements(node* _list) {
+	if (_list == NULL)
+		return 0;
+
+	int count = 1;
+	for (node* iter = _list; iter->next != _list; iter = iter->next)
+		count++;
+	return count;
 }
