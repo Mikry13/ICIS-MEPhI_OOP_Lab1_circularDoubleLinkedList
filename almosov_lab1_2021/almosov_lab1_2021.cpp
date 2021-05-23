@@ -29,7 +29,7 @@ char* getWord();
 
 //output//
 
-void printOut(node* _node, bool reverse = false, char format = ' ');
+void printOut(node* _node, bool reverse = false, char format = ' ', char end = '\n');
 void nodePointerArrayOutput(node** array);
 
 //algos//
@@ -41,7 +41,22 @@ int countElements(node* _list);
 
 //other//
 
-void nodePointerArrayDelete(node** array);
+void deleteNodeByArray(node** _list, node** array, int elem = 0);
+int strcmp_custom(char* str1, char* str2) {
+
+	while (*str1 != '\0') {
+		if (*str2 == '\0')	return  0;
+		if (*str1 < *str2)	return -1;
+		if (*str1 > *str2)	return  1;
+
+		str1++;
+		str2++;
+	}
+
+	if (*str2 != '\0') return -1;
+
+	return 0;
+}
 
 //
 // main //
@@ -55,20 +70,29 @@ int main()
 		word = getWord();
 		pushForward(&_first, word);
 	}
-	printf("\nfind:");
+	printf("List:"); printOut(_first);
 
-	word = getWord();
-
+	printf("\nfind:"); word = getWord();
 	node** foundIters = searchForNode(_first, word);
 	nodePointerArrayOutput(foundIters);
+	deleteNodeByArray(&_first, foundIters);
+	printf("Found nodes deleted!\n");
 
-	nodePointerArrayDelete(foundIters);
-	_first = foundIters[0];
+	printf("List:"); printOut(_first);
 
+	printf("additional elements:\n");
+	for (int i = 0; i < 4; i++) {
+		word = getWord();
+		pushForward(&_first, word);
+	}
 	deleteDuplicates(_first);
 
-	printOut(_first, true);
+	printf("\n");
+	printOut(_first, false);
+
 	printf("\n%d", countElements(_first));
+
+
 	return 0;
 }
 
@@ -116,7 +140,7 @@ char* getWord() {
 	delete[] string; //deallocating previous string
 	string = temp_string; //updating string pointer
 
-	string[*length - 1] = '\0'; // kind of "EOF", but for our string. //// ? C6386 ? ////
+	string[*length - 1] = '\0'; // kind of "EOF", but for our string.
 
 	delete(length);
 	delete(memory_size);
@@ -152,6 +176,7 @@ void deleteNode(node** _node, bool returnNext) {
 
 	node* output;
 
+	// we can change given pointer in two ways //
 	if (returnNext)
 		output = (*_node)->next;
 	else
@@ -247,10 +272,14 @@ void pushNodeForward(node** _node, char* data) {
 }
 
 //Prints list out
-void printOut(node* _node, bool reverse, char format) {
+//Format -> character between elemnts
+//End -> character at the end
+void printOut(node* _node, bool reverse, char format, char end) {
 	node* iter = _node; //because list is circular, we need to have an iterator to know if we went through the list
-	if (_node == NULL)
+	if (_node == NULL) {
+		printf("%c", end);
 		return;
+	}
 	else if (reverse) {
 		_node = _node->prev;
 		iter = _node;
@@ -268,6 +297,7 @@ void printOut(node* _node, bool reverse, char format) {
 		printf("%s%c", iter->data, format);
 
 	}
+	printf("%c", end);
 }
 
 node** searchForNode(node* _node, char* data) {
@@ -283,7 +313,7 @@ node** searchForNode(node* _node, char* data) {
 		if (strcmp(data, iter->data) == 0) {
 			found[(*length)++] = iter;
 			if (*length >= *memory_size) {
-				temp_array = new node * [(*memory_size) * 2];
+				temp_array = new node * [(*memory_size) * 2]; //// ? C26451 ? ////
 				for (int i = 0; i < *memory_size; i++)
 					temp_array[i] = found[i]; // moving current array to the next, with more space
 
@@ -299,27 +329,30 @@ node** searchForNode(node* _node, char* data) {
 	temp_array = new node * [(*length)];
 	for (int i = 0; i < *length; i++)
 		temp_array[i] = found[i];
-	found[*length] = NULL; //last is NULL
+	found[*length] = NULL; //last is NULL to know where 'found' array ends
 
 	delete(length);
 	delete(memory_size);
 	return found;
 }
 
-void nodePointerArrayDelete(node** array) {
-	for (int i = 0;; i++) {
-		if (array[i] == NULL)
-			break;
-		deleteNode(&array[i]);
-	}
+//'int elem' - input # of element, not index!
+void deleteNodeByArray(node** list, node** array, int elem) {
+	for (int i = 1; *array != NULL; array++)
+		if (elem < 1)
+			if (list[0]->data = array[0]->data) deleteNode(list); //changing our list pointer if it points to a pointer in a NodeArray to delete
+			else deleteNode(array);
+		else if (i == elem)
+			if (list[0]->data = array[0]->data) deleteNode(list);
+			else deleteNode(array); //changing our list pointer if it points to a pointer in a NodeArray to delete
+			deleteNode(array);
 }
 
 void nodePointerArrayOutput(node** array) {
-	for (int i = 0;; i++) {
-		if (array[i] == NULL)
-			break;
-		printf("| #%d | %s |\n", i + 1, array[i]->data);
-	}
+	if (*array == NULL)
+		return;
+	for (int i = 1;*array != NULL; array++, i++)
+		printf("| #%d |  %s <- %s -> %s | \n", i, (*array)->prev->data, (*array)->data, (*array)->next->data);
 }
 
 void sortList(node* _list) {
@@ -327,28 +360,32 @@ void sortList(node* _list) {
 }
 
 void deleteDuplicates(node* _list) {
+	if (_list == NULL)
+		return;
+	if (_list->next == _list)
+		return;
+
 	node* iter = _list;
 	node* jter;
 	do {
-		jter = iter->next;
+		jter = iter->next; //comparing from next after 'iter', to not delete it.
 		while (jter != iter) {
-			printf("I:%s J:%s\n", iter->data, jter->data);
-
 			if (strcmp(iter->data, jter->data) == 0)
 			{
-				deleteNode(&jter);
-				continue;
+				deleteNode(&jter, true); //if we found duplicate node, delete and check next
+				continue; //'deleteNode()' changes 'jter' to the next node, so we skip while loop iteration
 			}
 			jter = jter->next;
 		}
-		printf("\n");
 		iter = iter->next;
-	} while (iter != _list);
+	} while (iter != _list); //iterating until we made a cycle in a list
 }
 
 int countElements(node* _list) {
 	if (_list == NULL)
 		return 0;
+	if (_list->next == _list)
+		return 1;
 
 	int count = 1;
 	for (node* iter = _list; iter->next != _list; iter = iter->next)
