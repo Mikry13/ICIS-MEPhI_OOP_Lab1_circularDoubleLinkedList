@@ -1,305 +1,286 @@
-﻿#define _CRT_SECURE_NO_WARNINGS
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
+﻿#include "CDLL.h"
 
-typedef struct node{ //we don't need to type "struct" to define a value, so it should be no name here, BUT
-	char* data;
-	node* next = NULL; //next node
-	node* prev = NULL; //prev node
-}node; //we only need typedef name in global space to simply create this struct with "node example;"
+int getNum() {
+	char* word;
+	int num;
+	while (true) {
+		word = getWord();
+		if (atoi(word) || *word == '0') { num = atoi(word); return num; }
+		else printf("> Wrong value! Enter it again please.\n"
+			"> Value: ");
+	}
+}
 
-//
-// circular double linked list functions //
-//
+void find(node** _list) {
+	if (*_list == NULL || _list == NULL) {
+		printf("> List is empty!\n");
+		return;
+	}
 
-node* createNode(char* data);
+	int code, upper_border;
+	node** found;
 
-void deleteNode(node** _node, bool returnNext = true);
-void deleteList(node** _node);
+	printf("> What node of list do you want to find?\n"
+		"> Value: "), found = searchForNode(*_list, getWord());
+	printf("> Found values:\n ");
+	if (found == NULL || *found == NULL) { printf("| nothing |\n"); return; }
+	else nodePointerArrayOutput(found);
 
-void pushBack(node** first_node, char* data);
-void pushForward(node** first_node, char* data);
-void pushNodeBack(node** _node, char* data);
-void pushNodeForward(node** _node, char* data);
+	upper_border = nodePointerArrayCount(found);
 
-char* getWord();
-void printOut(node* _node, bool reverse = false, char format = ' ');
+	printf("> What to do with found nodes?\n"
+		"0 - delete one of them.\n"
+		"1 - delete all.\n"
+		"2 - nothing.\n"), code = getNum();
 
-node** searchForNode(node* _node, char* data);
+	while (code != 0 && code != 1 && code != 2)
+		printf("> Wrong value! Enter it again please.\n"
+			"> Value: "), code = getNum();
 
-void nodePointerArrayOutput(node** array);
-//
-// other functions //
-//
+	switch (code) {
+	case 0:
+		printf("> Specify index of node you want to delete.\n"
+			"> Value: ");
+		code = getNum();
+		
+		while (code < 1 || code > upper_border)
+			printf("> Wrong value! Enter it again please.\n"
+				"> Value: "), code = getNum(); 
+		deleteNodeByArray(_list, found, code);
+		break;
 
-char* getWord();
+	case 1: deleteNodeByArray(_list, found); break;
+	case 2: break;
+	default: break;
+	}
+	delete found;
+}
 
+node* input() {
+	node* output = NULL;
+	int code, push;
+
+	/// INPUT TYPE ///
+	printf("> How do you want to input data to list?\n"
+		"0 - stop operation.\n"
+		"1 - manually.\n" 
+		"2 - from file.\n"
+		"> Value: "), code = getNum();
+
+	
+	while (code != 0 && code != 1 && code != 2)
+		printf("> Wrong value! Enter it again please.\n"
+			"Value: "), code = getNum();
+	if (code == 0) return NULL;
+
+	/// PUSH TYPE ///
+	printf("> Method of adding nodes to the list:\n"
+		"0 - stop operation.\n"
+		"1 - add new to the end (Push Back).\n"
+		"2 - add new to the beginning (Push Forward).\n"
+		"> Value: "),	push = getNum();
+	
+	while (push != 0 && push != 1 && push != 2)
+		printf("> Wrong value! Enter it again please.\n"
+			"> Value: "), push = getNum();
+	if (push == 0) return NULL;
+
+	switch (code) {
+
+	/// MANUAL INPUT ///
+	case 1:
+manual_input:
+		printf("> Enter amount of nodes you want to input: "), code = getNum();
+		if (code < 0) { printf("> Wrong value! Please enter value again.\n"); goto manual_input; }
+
+		for (; code > 0; code--)
+			if (push == 1) pushBack(&output, getWord());
+			else pushForward(&output, getWord());
+
+		return output;
+
+	/// FILE INPUT ///
+	case 2:
+file_input:
+		{ //for C2361, to free 'file'
+			printf("> Enter name of the file: ");
+			FILE* file = fopen(getWord(), "r");
+			if (file)
+			{
+				output = readFromFile(file, (push == 1) ? true : false);
+				fclose(file);
+				printf("> Data read successful.\n");
+				return output;
+			}
+		}
+		printf("> File I/O error!\n"
+					"0 - Stop operation."
+					"1 - Enter data manually.\n"
+					"2 - Enter name of the file again.\n");
+
+		while (code != 0 && code != 1 && code != 2)
+			printf("> Wrong value! Enter it again please.\n"
+				"> Value: "), code = getNum();
+
+		if (code == 0) return NULL;
+		if (code == 1) goto manual_input;
+		goto file_input;
+
+	/// DEFAULT ///
+	default: return NULL;
+	}
+}
+
+
+void output(node* _list) {
+	if (_list == NULL) {
+		printf("> List is empty!\n");
+		return;
+	}
+
+	int num;
+
+	printf("> Reverse input?\n"
+		"1 - yes.\n"
+		"2 - no. \n"
+		"> Value: "), num = getNum();
+
+	while (num != 1 && num != 2)
+		printf("> Wrong value! Enter it again please.\n"
+			"> Value: "), num = getNum();
+
+	printf("> List data:"); outputList(_list, (num == 1) ? true : false);
+}
+
+void fileOuput(node * _list) {
+	if (_list == NULL) {
+		printf("> List is empty!\n");
+		return;
+	}
+
+	int num = 0;
+	int check;
+	char* filename;
+	FILE* file = NULL;
+
+	// file output //
+fout:
+	check = 0; //for ftell
+
+	printf("Enter file name:\n"
+		"Value: "), filename = getWord();
+
+	file = fopen(filename, "r+"); //needed for ftell work.
+
+	if (!file) file = fopen(filename, "w");
+		//checking size of file by looking at the file iterator place ('ftell')
+	else fseek(file, 0, SEEK_END), check = ftell(file); 
+
+
+	//if read successful and file is empty (file iterator is on 0)
+	if (file && check == 0)
+		write: outputToFile(file, _list), printf("> Data save successful.\n"), num = 0;
+	else if (check != 0) {
+		printf("> File not empty!\n"
+			"0 - stop operation.\n"
+			"1 - Enter name of the file again.\n"
+			"2 - Override file.\n"
+			"Value: "), num = getNum();
+
+		while (num != 0 && num != 1 && num != 2)
+			printf("> Wrong value! Enter it again please.\n"
+				"> Value: "), num = getNum();
+		if (num == 2) {
+			fclose(file), fopen(filename, "w");
+			goto write;
+		}
+	}
+	else
+		printf("> File I/O error!\n"
+			"0 - stop operation.\n"
+			"1 - Enter name of the file again.\n"
+			"Value: "), num = getNum();
+
+	while (num != 0 && num != 1)
+		printf("> Wrong value! Enter it again please.\n"
+			"> Value: "), num = getNum();
+
+	fclose(file);
+	if (num == 0) return;
+	if (num == 1) goto fout;
+	
+	return;
+}
+
+void output_menu() {
+	printf("\n> Avaliable commands:\n"
+		"0 - exit program.\n"
+		"1 - output menu again.\n"
+		"2 - input data into list.\n"
+		"3 - find data in list.\n"
+		"4 - delete list.\n"
+		"5 - output full list data.\n"
+		"6 - delete duplicates from list.\n"
+		"7 - sort list.\n"
+		"8 - save list to the file.\n"
+		"9 - display amount of elements.\n");
+}
 //
 // main //
 //
 int main()
 {
-	node* _first = NULL;
-	char* word = getWord();
-	pushForward(&_first, word);
-	for (int i = 0; i < 4; i++) {
-		word = getWord();
-		pushForward(&_first, word);
-	}
-	printf("\nfind:");
+	node* _list = NULL; // circular double linked list
+	char* word = NULL;	// input string
+	int num; //input int
 
-	word = getWord();
-	node** foundIters = searchForNode(_first, word);
-	nodePointerArrayOutput(foundIters);
-
-	printOut(_first, true);
-
-	return 0;
-}
-
-//
-// other functions //
-//
-
-//Returns a string from console input
-char* getWord() {
-	
-	int* length = new int{ 0 }; //string length (also used as iterator gradually increased to the size of string later)
-
-	int* memory_size = new int{ 8 }; //default amount of characters to allocate for string.
-
-	char* string = new char[*memory_size]; //pointer to the start of a string
-	char* temp_string = NULL;
-
-	char current_char = getchar(); //reading the first character
-
-	 // reading characters until word is over //
-	while (current_char != '\n' && current_char != ' ') { //someone said space must be the word, so commented.
-		string[(*length)++] = current_char; //adding character to a string, increasing length
-
-		// if the length changed over "memory_size", increasing "memory_size" //
-		if (*length + 1 > *memory_size) { //"+1" because we need extra character to text kind of "EOF", but for our string, - '\0'
-
-			temp_string = new char[(*memory_size) * 2]; //// ? C26451 ? ////
-			for (int i = 0; i < *memory_size; i++) {
-				temp_string[i] = string[i]; // moving current string to the next 
-			}
-
-			delete[] string; //deallocating previous string
-			string = temp_string; //updating string pointer
-
-			*memory_size *= 2; //increasing memory twice
-		}
-		current_char = getchar(); //reading the next character
-	}
-	
-	//It's possible the situation when u have almost twice memory than needed, so we deallocating this excess memory
-	*length += 1; //insted of last symbol '\n' or ' ', we will add '\0' as the end of string
-	temp_string = new char[*length];
-
-	for (int i = 0; i < *length - 1; i++) {
-		temp_string[i] = string[i];
-	}
-
-	delete[] string; //deallocating previous string
-	string = temp_string; //updating string pointer
-
-	string[*length - 1] = '\0'; // kind of "EOF", but for our string.
-
-	delete(length);
-	delete(memory_size);
-
-	return string;
-}
-
-//
-// circular double linked list //
-//
-
-//Creates a new node
-node* createNode(char* data) { //creates new node with given data
-	node* new_node = new node{ data };
-	new_node->next = new_node;
-	new_node->prev = new_node;
-	return new_node;
-}
-
-//Deletes a node
-void deleteNode(node** _node, bool returnNext) {
-
-	if (*_node == NULL)
-		return;
-
-	// if node the last, delete and return 0 //
-	else if ((*_node)->next == *_node)
+	output_menu();
+menu:
+	printf("> Value: ");
+	num = getNum();
+	switch(num)
 	{
-		delete(*_node);
-		*_node = NULL;
-		return;
+	// exit //
+	case 0: return 0;
+
+	// output menu //
+	case 1: output_menu(); goto menu;
+
+	// input data //
+	case 2:
+	{
+		node* temp;
+		temp = input();
+		if (temp == NULL) //'input()' outputs NULL if nothing input, but we can already have data in list.
+			goto menu;
+		_list = temp;
+		goto menu;
 	}
 
-	node* output;
+	// find data //
+	case 3: find(&_list); goto menu;
 
-	if (returnNext)
-		output = (*_node)->next;
-	else
-		output = (*_node)->prev;
+	// delete list //
+	case 4: if (_list == NULL) deleteList(&_list); goto menu;
 
-	// pointing nodes around "_node" to each other //
-	(*_node)->prev->next = (*_node)->next;
-	(*_node)->next->prev = (*_node)->prev;
+	// output data //
+	case 5: output(_list); goto menu;
 
-	// and delete the node
-	delete(*_node);
-	*_node = output;
-}
+	// delete duplicates //
+	case 6: deleteDuplicates(_list); goto menu;
 
-//Deletes full list
-void deleteList(node** _node) {
-	//we need to change actual pointer that goes from higher function so we have pointer to a pointer in arguments
-	while (*_node != NULL)
-		deleteNode(_node);
-}
+	// sort list //
+	case 7: sortList(_list, false); goto menu;
 
-//Adds node to the end of a list
-void pushBack(node** first_node, char* data) {
-	//we need pointer to pointer only because there're can be NULL
-	if (*first_node == NULL) {
-		*first_node = createNode(data);
-	}
-	else {
-		// creating new node //
-		node* new_node = createNode(data);
+	// save to file //
+	case 8: fileOuput(_list); goto menu;
 
-		// saving the first and last nodes (new node will point to both obviously) //
-		new_node->next = *first_node;
-		new_node->prev = (*first_node)->prev;
+	// amount of elements //
+	case 9: printf("> Amount of elements: %d\n", countElements(_list)); goto menu;
 
-		(*first_node)->prev->next = new_node; //pointing last to the new
-		(*first_node)->prev = new_node; //pointing first to the new
-	}
-}
-
-//Adds node to the beginning of a list
-void pushForward(node** first_node, char* data) {
-	// almost the same as "pushBack", but we change "first_node" at the end.
-	// we need to change a pointer to a first node so we have "node**" in arguments of a function
-	if (*first_node == NULL)
-		*first_node = createNode(data);
-	else {
-		// creating new node //
-		node* new_node = createNode(data);
-
-		// saving the first and last nodes (new node will point to both obviously) //
-		new_node->next = *first_node;
-		new_node->prev = (*first_node)->prev;
-
-		//
-		(*first_node)->prev->next = new_node; //pointing last to the new
-		(*first_node)->prev = new_node; //pointing first to the new
-
-		(*first_node) = new_node; //new_node now the first
-	}
-}
-
-//Adds node after the given iterator
-void pushNodeBack(node** _node, char* data) {
-	//we need pointer to pointer only because there're can be NULL
-	if (*_node == NULL)
-		*_node = createNode(data);
-	else {
-		node* new_node = createNode(data);
-
-		new_node->next = (*_node)->next;
-		new_node->prev = *_node;
-
-		(*_node)->next->prev = new_node;
-		(*_node)->next = new_node;
-	}
-}
-
-//Adds node before the given iterator
-void pushNodeForward(node** _node, char* data) {
-	//if we want to push node forward, it will change its position relative to first node, so we need "node**"
-	if (*_node == NULL)
-		*_node = createNode(data);
-	else {
-		node* new_node = createNode(data);
-
-		new_node->next = *_node;
-		new_node->prev = (*_node)->prev;
-
-		(*_node)->prev->next= new_node;
-		(*_node)->prev= new_node;
-	}
-}
-
-//Prints list out
-void printOut(node* _node, bool reverse, char format) {
-	node* iter = _node; //because list is circular, we need to have an iterator to know if we went through the list
-	if (_node == NULL)
-		return;
-	else if (reverse){
-		_node = _node->prev;
-		iter = _node;
-		while (iter->prev != _node) {
-			printf("%s%c", iter->data, format);
-			iter = iter->prev;
-		}
-		printf("%s%c", iter->data, format);
-	}
-	else {
-		while (iter->next != _node) {
-			printf("%s%c", iter->data, format);
-			iter = iter->next;
-		}
-		printf("%s%c", iter->data, format);
-		
-	}
-}
-
-node** searchForNode(node* _node, char* data) {
-	int* length = new int { 0 };
-
-	int* memory_size = new int{ 2 };
-
-	node** found = new node * [*memory_size];
-	node** temp_array = NULL;
-
-	node* iter = _node;
-	do{
-		if (strcmp(_node->data, iter->data) == 0) {
-			found[(*length)++] = iter;
-			if (*length >= *memory_size) {
-				temp_array = new node*[(*memory_size) * 2];
-				for (int i = 0; i < *memory_size; i++)
-					temp_array[i] = found[i]; // moving current array to the next, with more space
-
-				delete[] found; //deallocating previous array
-				found = temp_array; //updating array pointer
-
-				*memory_size *= 2; //increasing memory twice
-			}
-		}
-		iter = iter->next;
-	} while (iter != _node);
-
-	temp_array = new node* [(*length) + 1];
-	for (int i = 0; i < *length; i++)
-		temp_array[i] = found[i];
-	found[*length] = NULL; //last is NULL
-
-	delete(length);
-	delete(memory_size);
-	return found;
-}
-
-
-void nodePointerArrayOutput(node** array) {
-	for (int i = 0;; i++) {
-		if (array[i] == NULL)
-			break;
-		printf("| %d | ADR: %p | DATA: %s |\n", i + 1, array[i], array[i]->data);
+	// err input //
+	default:
+		printf("> Wrong value! Try again.\n");
+		goto menu;
 	}
 }
