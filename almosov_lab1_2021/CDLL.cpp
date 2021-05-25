@@ -1,4 +1,6 @@
 #define _CRT_SECURE_NO_WARNINGS
+#pragma warning(disable: 26451) //multiplying data got from pointer warning. Everything's fine.
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -27,7 +29,7 @@ void deleteNode(node** _node, bool returnNext) {
 	else if ((*_node)->next == *_node)
 	{
 		delete(*_node);
-		*_node = NULL;
+		_node = NULL;
 		return;
 	}
 
@@ -159,7 +161,7 @@ char* getWord(FILE* file) {
 		// if the length changed over "memory_size", increasing "memory_size" //
 		if (*length >= *memory_size) { // >= to not overread the unused memory
 
-			temp_string = new char[(*memory_size) * 2]; //// ? C26451 ? ////
+			temp_string = new char[(*memory_size) * 2];
 			for (int i = 0; i < *memory_size; i++)
 				temp_string[i] = string[i]; // moving current string to the next
 
@@ -207,38 +209,13 @@ node* readFromFile(FILE* file, bool insertAtEnd) {
 }
 
 //
-// other functions //
+// output //
 //
-
-int strcmp_custom(char* str1, char* str2) {
-
-	while (*str1 != '\0') {
-		if (*str2 == '\0')	return  0;
-		if (*str1 < *str2)	return -1;
-		if (*str1 > *str2)	return  1;
-
-		str1++;
-		str2++;
-	}
-
-	if (*str2 != '\0') return -1;
-
-	return 0;
-}
-
-void write_to_file(FILE* f, node* _list)
-{
-	if (f && (_list != NULL)) {
-		fprintf(f, "%s\n", _list->data); //we start from '_list->next' and to not break the 'for' loop, we write _list first.
-		for (node* iter = _list->next; iter != _list; iter = iter->next)
-			fprintf(f, "%s\n", iter->data);
-	}
-}
 
 //Prints list out
 //Format -> character between elemnts
 //End -> character at the end
-void printOut(node* _node, bool reverse, char format, char end) {
+void outputList(node* _node, bool reverse, char format, char end) {
 	node* iter = _node; //because list is circular, we need to have an iterator to know if we went through the list
 	if (_node == NULL) {
 		printf("%c", end);
@@ -263,6 +240,26 @@ void printOut(node* _node, bool reverse, char format, char end) {
 	}
 	printf("%c", end);
 }
+
+void nodePointerArrayOutput(node** array) {
+	if (*array == NULL)
+		return;
+	for (int i = 1; *array != NULL; array++, i++)
+		printf("| #%d |  %s <- %s -> %s | \n", i, (*array)->prev->data, (*array)->data, (*array)->next->data);
+}
+
+void outputToFile(FILE* f, node* _list)
+{
+	if (f && (_list != NULL)) {
+		fprintf(f, "%s\n", _list->data); //we start from '_list->next' and to not break the 'for' loop, we write _list first.
+		for (node* iter = _list->next; iter != _list; iter = iter->next)
+			fprintf(f, "%s\n", iter->data);
+	}
+}
+
+//
+// algos //
+//
 
 node** searchForNode(node* _node, char* data) {
 	int* length = new int{ 0 };
@@ -305,26 +302,41 @@ void deleteNodeByArray(node** array, node** list, int elem) {
 	if (array == NULL || *array == NULL || list == NULL || *list == NULL)
 		return;
 
-	for (int i = 1; *array != NULL; array++)
+	for (int i = 1; *array != NULL; array++, i++)
 		if (elem < 1)
-			if (list[0]->data == array[0]->data) deleteNode(list, true); //changing our list pointer if it points to a pointer in a NodeArray to delete
+			if (list[0]->data == array[0]->data) { deleteNode(array, true); list = array; return; }//changing our list pointer if it points to a pointer in a NodeArray to delete
 			else deleteNode(array, true);
 		else if (i == elem)
-			if (list[0]->data == array[0]->data) deleteNode(list, true);
-			else deleteNode(array, true); //changing our list pointer if it points to a pointer in a NodeArray to delete
+			//don't know why i need to pass array instead of list
+			if (list[0]->data == array[0]->data) { deleteNode(array, true); list = array; return; }
+			else { deleteNode(array, true); return; } //changing our list pointer if it points to a pointer in a NodeArray to delete
 	deleteNode(array, true);
 	delete array;
 }
 
-void nodePointerArrayOutput(node** array) {
-	if (*array == NULL)
+void sortList(node* _list, bool descending) {
+	if (_list == NULL)
 		return;
-	for (int i = 1; *array != NULL; array++, i++)
-		printf("| #%d |  %s <- %s -> %s | \n", i, (*array)->prev->data, (*array)->data, (*array)->next->data);
-}
+	if (_list->next == _list)
+		return;
 
-void sortList(node* _list) {
-
+	node* iter = _list;
+	node* jter;
+	char* temp;
+	do {
+		jter = iter->next; //comparing from next after 'iter', to not delete it.
+		while (jter != iter) {
+			if (strcmp(iter->data, jter->data) > 0)
+			{
+				temp = iter->data;
+				iter->data = jter->data;
+				jter->data = temp;
+				continue;
+			}
+			jter = jter->next;
+		}
+		iter = iter->next;
+	} while (iter != _list); //iterating until we made a cycle in a list
 }
 
 void deleteDuplicates(node* _list) {
@@ -359,4 +371,30 @@ int countElements(node* _list) {
 	for (node* iter = _list; iter->next != _list; iter = iter->next)
 		count++;
 	return count;
+}
+
+//
+// other //
+//
+
+int nodePointerArrayCount(node** array) {
+	int count = 0;
+	for (; *array != NULL; array++, count++);
+	return count;
+}
+
+int strcmp_custom(char* str1, char* str2) {
+
+	while (*str1 != '\0') {
+		if (*str2 == '\0')	return  0;
+		if (*str1 < *str2)	return -1;
+		if (*str1 > *str2)	return  1;
+
+		str1++;
+		str2++;
+	}
+
+	if (*str2 != '\0') return -1;
+
+	return 0;
 }

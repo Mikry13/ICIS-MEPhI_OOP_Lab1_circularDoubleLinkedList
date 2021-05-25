@@ -15,6 +15,9 @@ typedef struct node { //we don't need to type "struct" to define a value, so it 
 	node* prev = NULL; //prev node
 }node; //we only need typedef name in global space to simply create this struct with "node example;"
 
+
+// basic //
+
 node* createNode(char* data);
 
 void deleteNode(node** _node, bool returnNext = true);
@@ -33,20 +36,21 @@ node* readFromFile(FILE* file, bool insertAtEnd);
 
 //output//
 
-void printOut(node* _node, bool reverse = false, char format = ' ', char end = '\n');
+void outputList(node* _node, bool reverse = false, char format = ' ', char end = '\n');
 void nodePointerArrayOutput(node** array);
-
-void write_to_file(FILE* f, node* _list);
+void outputToFile(FILE* f, node* _list);
 
 
 //algos//
 
 node** searchForNode(node* _node, char* data);
-void sortList(node* _list);
+void deleteNodeByArray(node** _list, node** array, int elem = 0);
+
+void sortList(node* _list, bool descending);
 void deleteDuplicates(node* _list);
 int countElements(node* _list);
 
 //other//
 
-void deleteNodeByArray(node** _list, node** array, int elem = 0);
+int nodePointerArrayCount(node** array);
 int strcmp_custom(char* str1, char* str2);
