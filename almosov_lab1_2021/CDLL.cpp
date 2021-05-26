@@ -30,7 +30,7 @@ void deleteNode(node** _node, bool returnNext) {
 	{
 		delete ((*_node)->data);
 		delete(*_node);
-		_node = NULL;
+		*_node = NULL;
 		return;
 	}
 
@@ -47,8 +47,9 @@ void deleteNode(node** _node, bool returnNext) {
 	(*_node)->next->prev = (*_node)->prev;
 
 	// and delete the node
-	delete(*_node);
-	*_node = output;
+	delete ((*_node)->data); //delete char*
+	delete(*_node); //delete structure
+	*_node = output; //update pointer
 }
 
 //Deletes full list
@@ -245,8 +246,10 @@ void outputList(node* _node, bool reverse, char format, char end) {
 void nodePointerArrayOutput(node** array) {
 	if (*array == NULL)
 		return;
-	for (int i = 1; *array != NULL; array++, i++)
-		printf("| #%d |  %s <- %s -> %s | \n", i, (*array)->prev->data, (*array)->data, (*array)->next->data);
+	
+	for (int i = 1; array[i - 1] != NULL; i++)
+		printf("| #%d |  %s <- %s -> %s | \n", 
+			i, array[i - 1]->prev->data, array[i - 1]->data, array[i - 1]->next->data);
 }
 
 void outputToFile(FILE* f, node* _list)
@@ -302,27 +305,25 @@ node** searchForNode(node* _node, char* data) {
 void deleteNodeByArray(node** array, node** list, int elem) {
 	if (array == NULL || *array == NULL || list == NULL || *list == NULL)
 		return;
-
-	for (int i = 1; *array != NULL; array++, i++)
+	
+	for (int i = 1; array [i - 1]!= NULL; i++)
 		if (elem < 1) {
-			printf("\n%s\n", list[i - 1]->data);
-			if (list[i - 1]->data == array[0]->data)
+			if (strcmp((*list)->data, array[i - 1]->data) == 0)
 			{
-				deleteNode(&list[i - 1], true);
+				deleteNode(list, true);
 				return;
 			}//changing our list pointer if it points to a pointer in a NodeArray to delete
-			else deleteNode(array, true);
+			else deleteNode(&array[i - 1], true);
 		}
 		else if (i == elem)
 			//don't know why i need to pass array instead of list
-			if (list[i - 1]->data == array[0]->data) {
-				deleteNode(&list[i - 1], true);
+			if (strcmp((*list)->data, array[i - 1]->data) == 0) {
+				deleteNode(list, true);
 				return;
 			}
-			else { deleteNode(array, true); return; } //changing our list pointer if it points to a pointer in a NodeArray to delete
-	deleteNode(array, true);
-	delete array;
+			else { deleteNode(&array[i - 1], true); return; } //changing our list pointer if it points to a pointer in a NodeArray to delete
 }
+
 
 void sortList(node* _list, bool descending) {
 	if (_list == NULL)
@@ -392,7 +393,7 @@ int countElements(node* _list) {
 
 int nodePointerArrayCount(node** array) {
 	int count = 0;
-	for (; *array != NULL; array++, count++);
+	for (; array[count] != NULL; count++);
 	return count;
 }
 

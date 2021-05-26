@@ -27,7 +27,7 @@ void find(node** _list) {
 	else nodePointerArrayOutput(found);
 
 	upper_border = nodePointerArrayCount(found);
-
+	
 	printf("> What to do with found nodes?\n"
 		"0 - delete one of them.\n"
 		"1 - delete all.\n"
@@ -42,14 +42,14 @@ void find(node** _list) {
 		printf("> Specify index of node you want to delete.\n"
 			"> Value: ");
 		code = getNum();
-		
+
 		while (code < 1 || code > upper_border)
 			printf("> Wrong value! Enter it again please.\n"
-				"> Value: "), code = getNum(); 
-		deleteNodeByArray(_list, found, code);
+				"> Value: "), code = getNum();
+		deleteNodeByArray(found, _list, code);
 		break;
 
-	case 1: deleteNodeByArray(_list, found); break;
+	case 1: deleteNodeByArray(found, _list); break;
 	case 2: break;
 	default: break;
 	}
@@ -63,11 +63,11 @@ node* input() {
 	/// INPUT TYPE ///
 	printf("> How do you want to input data to list?\n"
 		"0 - stop operation.\n"
-		"1 - manually.\n" 
+		"1 - manually.\n"
 		"2 - from file.\n"
 		"> Value: "), code = getNum();
 
-	
+
 	while (code != 0 && code != 1 && code != 2)
 		printf("> Wrong value! Enter it again please.\n"
 			"Value: "), code = getNum();
@@ -78,8 +78,8 @@ node* input() {
 		"0 - stop operation.\n"
 		"1 - add new to the end (Push Back).\n"
 		"2 - add new to the beginning (Push Forward).\n"
-		"> Value: "),	push = getNum();
-	
+		"> Value: "), push = getNum();
+
 	while (push != 0 && push != 1 && push != 2)
 		printf("> Wrong value! Enter it again please.\n"
 			"> Value: "), push = getNum();
@@ -87,9 +87,9 @@ node* input() {
 
 	switch (code) {
 
-	/// MANUAL INPUT ///
+		/// MANUAL INPUT ///
 	case 1:
-manual_input:
+	manual_input:
 		printf("> Enter amount of nodes you want to input: "), code = getNum();
 		if (code < 0) { printf("> Wrong value! Please enter value again.\n"); goto manual_input; }
 
@@ -99,33 +99,33 @@ manual_input:
 
 		return output;
 
-	/// FILE INPUT ///
+		/// FILE INPUT ///
 	case 2:
-file_input:
-		{ //for C2361, to free 'file'
-			printf("> Enter name of the file: ");
-			FILE* file = fopen(getWord(), "r");
-			if (file)
-			{
-				output = readFromFile(file, (push == 1) ? true : false);
-				fclose(file);
-				printf("> Data read successful.\n");
-				return output;
-			}
+	file_input:
+	{ //for C2361, to free 'file'
+		printf("> Enter name of the file: ");
+		FILE* file = fopen(getWord(), "r");
+		if (file)
+		{
+			output = readFromFile(file, (push == 1) ? true : false);
+			fclose(file);
+			printf("> Data read successful.\n");
+			return output;
 		}
-		printf("> File I/O error!\n"
-			"0 - Stop operation.\n"
-			"1 - Enter data manually.\n"
-			"2 - Enter name of the file again.\n"
+	}
+	printf("> File I/O error!\n"
+		"0 - Stop operation.\n"
+		"1 - Enter data manually.\n"
+		"2 - Enter name of the file again.\n"
+		"> Value: "), code = getNum();
+
+	while (code != 0 && code != 1 && code != 2)
+		printf("> Wrong value! Enter it again please.\n"
 			"> Value: "), code = getNum();
 
-		while (code != 0 && code != 1 && code != 2)
-			printf("> Wrong value! Enter it again please.\n"
-				"> Value: "), code = getNum();
-
-		if (code == 0) return NULL;
-		if (code == 1) goto manual_input;
-		goto file_input;
+	if (code == 0) return NULL;
+	if (code == 1) goto manual_input;
+	goto file_input;
 
 	/// DEFAULT ///
 	default: return NULL;
@@ -153,7 +153,7 @@ void output(node* _list) {
 	printf("> List data:"); outputList(_list, (num == 1) ? true : false);
 }
 
-void fileOuput(node * _list) {
+void fileOuput(node* _list) {
 	if (_list == NULL) {
 		printf("> List is empty!\n");
 		return;
@@ -174,8 +174,8 @@ fout:
 	file = fopen(filename, "r+"); //needed for ftell work.
 
 	if (!file) file = fopen(filename, "w");
-		//checking size of file by looking at the file iterator place ('ftell')
-	else fseek(file, 0, SEEK_END), check = ftell(file); 
+	//checking size of file by looking at the file iterator place ('ftell')
+	else fseek(file, 0, SEEK_END), check = ftell(file);
 
 
 	//if read successful and file is empty (file iterator is on 0)
@@ -215,12 +215,12 @@ fout:
 
 	if (num == 0) return;
 	if (num == 1) goto fout;
-	
+
 	return;
 }
 
 void output_menu() {
-	printf("\n> Avaliable commands:\n"
+	printf("> Avaliable commands:\n"
 		"0 - exit program.\n"
 		"1 - output menu again.\n"
 		"2 - input data into list.\n"
@@ -230,7 +230,8 @@ void output_menu() {
 		"6 - delete duplicates from list.\n"
 		"7 - sort list.\n"
 		"8 - save list to the file.\n"
-		"9 - display amount of elements.\n");
+		"9 - display amount of elements.\n"
+		"10 - clear console.\n");
 }
 //
 // main //
@@ -245,15 +246,15 @@ int main()
 menu:
 	printf("> Value: ");
 	num = getNum();
-	switch(num)
+	switch (num)
 	{
-	// exit //
+		// exit //
 	case 0: return 0;
 
-	// output menu //
+		// output menu //
 	case 1: output_menu(); goto menu;
 
-	// input data //
+		// input data //
 	case 2:
 	{
 		node* temp;
@@ -267,16 +268,18 @@ menu:
 	// find data //
 	case 3: find(&_list); goto menu;
 
-	// delete list //
-	case 4: if (_list == NULL) deleteList(&_list); goto menu;
+		// delete list //
+	case 4: if (_list != NULL) deleteList(&_list);
+		  else printf("List is empty!\n");
+		goto menu;
 
-	// output data //
+		// output data //
 	case 5: output(_list); goto menu;
 
-	// delete duplicates //
+		// delete duplicates //
 	case 6: deleteDuplicates(_list); goto menu;
 
-	// sort list //
+		// sort list //
 	case 7:
 		printf("> Descending or Ascending Sort?!\n"
 			"0 - Descending.\n"
@@ -291,13 +294,13 @@ menu:
 		if (num == 0) sortList(_list, true);
 		goto menu;
 
-	// save to file //
+		// save to file //
 	case 8: fileOuput(_list); goto menu;
 
-	// amount of elements //
+		// amount of elements //
 	case 9: printf("> Amount of elements: %d\n", countElements(_list)); goto menu;
-
-	// err input //
+	case 10: system("CLS"); output_menu(); goto menu;
+		// err input //
 	default:
 		printf("> Wrong value! Try again.\n");
 		goto menu;
