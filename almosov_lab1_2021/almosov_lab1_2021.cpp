@@ -114,9 +114,10 @@ file_input:
 			}
 		}
 		printf("> File I/O error!\n"
-					"0 - Stop operation."
-					"1 - Enter data manually.\n"
-					"2 - Enter name of the file again.\n");
+			"0 - Stop operation.\n"
+			"1 - Enter data manually.\n"
+			"2 - Enter name of the file again.\n"
+			"> Value: "), code = getNum();
 
 		while (code != 0 && code != 1 && code != 2)
 			printf("> Wrong value! Enter it again please.\n"
@@ -190,8 +191,11 @@ fout:
 		while (num != 0 && num != 1 && num != 2)
 			printf("> Wrong value! Enter it again please.\n"
 				"> Value: "), num = getNum();
+
 		if (num == 2) {
+#pragma warning(disable: 6031)
 			fclose(file), fopen(filename, "w");
+#pragma warning(default: 6031)
 			goto write;
 		}
 	}
@@ -205,7 +209,10 @@ fout:
 		printf("> Wrong value! Enter it again please.\n"
 			"> Value: "), num = getNum();
 
+#pragma warning(disable: 6387)
 	fclose(file);
+#pragma warning(default: 6387)
+
 	if (num == 0) return;
 	if (num == 1) goto fout;
 	
@@ -270,7 +277,19 @@ menu:
 	case 6: deleteDuplicates(_list); goto menu;
 
 	// sort list //
-	case 7: sortList(_list, false); goto menu;
+	case 7:
+		printf("> Descending or Ascending Sort?!\n"
+			"0 - Descending.\n"
+			"1 - Ascending.\n"
+			"Value: "), num = getNum();
+
+		while (num != 0 && num != 1)
+			printf("> Wrong value! Enter it again please.\n"
+				"> Value: "), num = getNum();
+
+		if (num == 1) sortList(_list, false);
+		if (num == 0) sortList(_list, true);
+		goto menu;
 
 	// save to file //
 	case 8: fileOuput(_list); goto menu;

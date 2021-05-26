@@ -28,6 +28,7 @@ void deleteNode(node** _node, bool returnNext) {
 	// if node the last, delete and return 0 //
 	else if ((*_node)->next == *_node)
 	{
+		delete ((*_node)->data);
 		delete(*_node);
 		_node = NULL;
 		return;
@@ -199,7 +200,7 @@ char* getWord(FILE* file) {
 
 node* readFromFile(FILE* file, bool insertAtEnd) {
 	node* output = NULL;
-	char* word = getWord(file);
+	char* word = getWord(file);	
 	if (file != NULL && word != NULL)
 		for (; word != NULL; word = getWord(file))
 			if (insertAtEnd)
@@ -303,12 +304,21 @@ void deleteNodeByArray(node** array, node** list, int elem) {
 		return;
 
 	for (int i = 1; *array != NULL; array++, i++)
-		if (elem < 1)
-			if (list[0]->data == array[0]->data) { deleteNode(array, true); list = array; return; }//changing our list pointer if it points to a pointer in a NodeArray to delete
+		if (elem < 1) {
+			printf("\n%s\n", list[i - 1]->data);
+			if (list[i - 1]->data == array[0]->data)
+			{
+				deleteNode(&list[i - 1], true);
+				return;
+			}//changing our list pointer if it points to a pointer in a NodeArray to delete
 			else deleteNode(array, true);
+		}
 		else if (i == elem)
 			//don't know why i need to pass array instead of list
-			if (list[0]->data == array[0]->data) { deleteNode(array, true); list = array; return; }
+			if (list[i - 1]->data == array[0]->data) {
+				deleteNode(&list[i - 1], true);
+				return;
+			}
 			else { deleteNode(array, true); return; } //changing our list pointer if it points to a pointer in a NodeArray to delete
 	deleteNode(array, true);
 	delete array;
@@ -326,13 +336,16 @@ void sortList(node* _list, bool descending) {
 	do {
 		jter = iter->next; //comparing from next after 'iter', to not delete it.
 		while (jter != iter) {
-			if (strcmp(iter->data, jter->data) > 0)
-			{
-				temp = iter->data;
-				iter->data = jter->data;
-				jter->data = temp;
-				continue;
-			}
+			if (descending && strcmp(iter->data, jter->data) > 0) goto swap;
+			if (!descending && strcmp(iter->data, jter->data) < 0) goto swap;
+
+			if (false) { 
+			swap: 
+				temp = iter->data; 
+				iter->data = jter->data; 
+				jter->data = temp; 
+			continue; }
+
 			jter = jter->next;
 		}
 		iter = iter->next;
