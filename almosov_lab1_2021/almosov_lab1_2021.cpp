@@ -1,16 +1,39 @@
 ﻿#include "CDLL.h"
+#include <ctype.h> // isdigit()
 
+//> Interface to get a number from user.
 int getNum() {
 	char* word;
-	int num;
+	
+	//atoi() returns '39' if input is 'ab3a...e9' (any combination of characters with these numbers in correct order)
+	//so we need to check if string has a character. To do so, we need a buffer char below.
+	char buff;
+
+	//atoi() doesnt output negative int, so we need some flag
+	bool negative = false;
+
+	int num; //output
 	while (true) {
 		word = getWord();
-		if (atoi(word) || *word == '0') { num = atoi(word); return num; }
-		else printf("> Wrong value! Enter it again please.\n"
+
+		if (*word == '-') negative = true; //if first character is a minus, then it's negative
+		else if (!isdigit(*word)) { delete word; goto err; }//if it's not minus and not an int, then it's not a number
+		else negative = false;
+
+		buff = word[1]; //placing 2nd character (1st is checked before). I did it because of an algorythm of detecting a literal in string.
+		for (char* iter = &word[1]; buff != '\0' && buff != NULL; iter++, buff = *iter) //word from 'getWord()' always end with '\0'
+			if (!isdigit(buff)) { delete word; goto err; }
+
+		//"*word == '0'" is needed, because "if('0')" equals "if(false)"
+		if (atoi(word) || *word == '0') { num = atoi(word); delete word; return num; }
+
+		err:
+		printf("> Wrong value! Enter it again please.\n"
 			"> Value: ");
 	}
 }
 
+//> Interface to find elents in a list.
 void find(node** _list) {
 	if (*_list == NULL || _list == NULL) {
 		printf("> List is empty!\n");
@@ -19,9 +42,12 @@ void find(node** _list) {
 
 	int code, upper_border;
 	node** found;
+	char* word; //to find by key
 
 	printf("> What node of list do you want to find?\n"
-		"> Value: "), found = searchForNode(*_list, getWord());
+		"> Value: "), found = searchForNode(*_list, word = getWord());
+	delete word;
+
 	printf("> Found values:\n ");
 	if (found == NULL || *found == NULL) { printf("| nothing |\n"); return; }
 	else nodePointerArrayOutput(found);
@@ -56,8 +82,8 @@ void find(node** _list) {
 	delete found;
 }
 
-node* input() {
-	node* output = NULL;
+//> Interface to input data to the list.
+void input(node** _list) {
 	int code, push;
 
 	/// INPUT TYPE ///
@@ -71,7 +97,7 @@ node* input() {
 	while (code != 0 && code != 1 && code != 2)
 		printf("> Wrong value! Enter it again please.\n"
 			"Value: "), code = getNum();
-	if (code == 0) return NULL;
+	if (code == 0) return;
 
 	/// PUSH TYPE ///
 	printf("> Method of adding nodes to the list:\n"
@@ -83,7 +109,7 @@ node* input() {
 	while (push != 0 && push != 1 && push != 2)
 		printf("> Wrong value! Enter it again please.\n"
 			"> Value: "), push = getNum();
-	if (push == 0) return NULL;
+	if (push == 0) return;
 
 	switch (code) {
 
@@ -93,25 +119,31 @@ node* input() {
 		printf("> Enter amount of nodes you want to input: "), code = getNum();
 		if (code < 0) { printf("> Wrong value! Please enter value again.\n"); goto manual_input; }
 
-		for (; code > 0; code--)
-			if (push == 1) pushBack(&output, getWord());
-			else pushForward(&output, getWord());
+		{char* word = NULL; // for pushBack/Forward
+			for (; code > 0; code--)
+				if (push == 1) pushBack(_list, word = getWord());
+				else pushForward(_list, word = getWord());
+			if (!word) delete word;
+		}
 
-		return output;
+		return;
 
 		/// FILE INPUT ///
 	case 2:
 	file_input:
 	{ //for C2361, to free 'file'
+		char* word = NULL; //for fopen
 		printf("> Enter name of the file: ");
-		FILE* file = fopen(getWord(), "r");
+		FILE* file = fopen(word = getWord(), "r");
 		if (file)
 		{
-			output = readFromFile(file, (push == 1) ? true : false);
+			readFromFile(file, _list, (push == 1) ? true : false);
 			fclose(file);
 			printf("> Data read successful.\n");
-			return output;
+			delete word;
+			return;
 		}
+		delete word;
 	}
 	printf("> File I/O error!\n"
 		"0 - Stop operation.\n"
@@ -123,12 +155,12 @@ node* input() {
 		printf("> Wrong value! Enter it again please.\n"
 			"> Value: "), code = getNum();
 
-	if (code == 0) return NULL;
+	if (code == 0) return;
 	if (code == 1) goto manual_input;
 	goto file_input;
 
 	/// DEFAULT ///
-	default: return NULL;
+	default: return;
 	}
 }
 
@@ -153,7 +185,7 @@ void output(node* _list) {
 	printf("> List data:"); outputList(_list, (num == 1) ? true : false);
 }
 
-void fileOuput(node* _list) {
+void outputFile(node* _list) {
 	if (_list == NULL) {
 		printf("> List is empty!\n");
 		return;
@@ -161,7 +193,7 @@ void fileOuput(node* _list) {
 
 	int num = 0;
 	int check;
-	char* filename;
+	char* filename; //don't forget to delete allocated string!
 	FILE* file = NULL;
 
 	// file output //
@@ -214,7 +246,7 @@ fout:
 #pragma warning(default: 6387)
 
 	if (num == 0) return;
-	if (num == 1) goto fout;
+	if (num == 1) { delete filename; goto fout; } //deleting already allocated string and enter it again
 
 	return;
 }
@@ -233,9 +265,12 @@ void output_menu() {
 		"9 - display amount of elements.\n"
 		"10 - clear console.\n");
 }
+
 //
 // main //
 //
+
+//> Basic interface for calling functions of the program. Main Function
 int main()
 {
 	node* _list = NULL; // circular double linked list
@@ -255,17 +290,9 @@ menu:
 	case 1: output_menu(); goto menu;
 
 		// input data //
-	case 2:
-	{
-		node* temp;
-		temp = input();
-		if (temp == NULL) //'input()' outputs NULL if nothing input, but we can already have data in list.
-			goto menu;
-		_list = temp;
-		goto menu;
-	}
+	case 2: { input(&_list); goto menu; }
 
-	// find data //
+		// find data //
 	case 3: find(&_list); goto menu;
 
 		// delete list //
@@ -295,14 +322,16 @@ menu:
 		goto menu;
 
 		// save to file //
-	case 8: fileOuput(_list); goto menu;
+	case 8: outputFile(_list); goto menu;
 
 		// amount of elements //
 	case 9: printf("> Amount of elements: %d\n", countElements(_list)); goto menu;
 	case 10: system("CLS"); output_menu(); goto menu;
+
 		// err input //
 	default:
 		printf("> Wrong value! Try again.\n");
+		output_menu();
 		goto menu;
 	}
 }

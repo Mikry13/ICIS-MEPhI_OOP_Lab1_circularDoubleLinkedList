@@ -31,7 +31,7 @@ void pushNodeForward(node** _node, char* data);
 //input//
 
 char* getWord(FILE* file = NULL);
-node* readFromFile(FILE* file, bool insertAtEnd);
+void readFromFile(FILE* file, node** _list, bool insertAtEnd);
 
 
 //output//

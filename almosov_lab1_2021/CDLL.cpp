@@ -1,5 +1,5 @@
 #define _CRT_SECURE_NO_WARNINGS
-#pragma warning(disable: 26451) //multiplying data got from pointer warning. Everything's fine.
+
 
 #include <stdio.h>
 #include <string.h>
@@ -136,7 +136,8 @@ void pushNodeForward(node** _node, char* data) {
 // input //
 //
 
-//Returns a string from console input
+//> Returns a string from console/file input.
+//If 'FILE* file' is NULL, input from console.
 char* getWord(FILE* file) {
 
 	int* length = new int{ 0 }; //string length (also used as iterator gradually increased to the size of string later)
@@ -146,7 +147,7 @@ char* getWord(FILE* file) {
 	char* string = new char[*memory_size]; //pointer to the start of a string
 	char* temp_string = NULL;
 
-	char* current_char = new char; //pointer, because 'fscanf' doesnt support regular char
+	char current_char[1]; //char buffer
 
 	if (file != NULL) {
 		if (fscanf(file, "%c", current_char) < 1) {
@@ -163,7 +164,10 @@ char* getWord(FILE* file) {
 		// if the length changed over "memory_size", increasing "memory_size" //
 		if (*length >= *memory_size) { // >= to not overread the unused memory
 
-			temp_string = new char[(*memory_size) * 2];
+#pragma warning(disable: 26451) //multiplying data got from pointer warning. Everything's fine.
+			temp_string = new char[(*memory_size) * 2]; //allocating new memory field
+#pragma warning(default: 26451)
+
 			for (int i = 0; i < *memory_size; i++)
 				temp_string[i] = string[i]; // moving current string to the next
 
@@ -199,24 +203,26 @@ char* getWord(FILE* file) {
 	return string;
 }
 
-node* readFromFile(FILE* file, bool insertAtEnd) {
-	node* output = NULL;
-	char* word = getWord(file);	
+//> Appends (or creates if '_list' is NULL) the given list with data from file.
+//Doesnt do anything if something's wrong with file or there're nothing to read,
+//so check the file before calling this function. 
+void readFromFile(FILE* file, node** _list, bool insertAtEnd) {
+	char* word = getWord(file);
 	if (file != NULL && word != NULL)
 		for (; word != NULL; word = getWord(file))
 			if (insertAtEnd)
-				pushBack(&output, word);
-			else pushForward(&output, word);
-	return output;
+				pushBack(_list, word);
+			else pushForward(_list, word);
 }
 
 //
 // output //
 //
 
-//Prints list out
-//Format -> character between elemnts
-//End -> character at the end
+//> Prints list out.
+//	Reverse -> reverse output.
+//	Format -> character between elemnts.
+//	End -> character at the end.
 void outputList(node* _node, bool reverse, char format, char end) {
 	node* iter = _node; //because list is circular, we need to have an iterator to know if we went through the list
 	if (_node == NULL) {
@@ -243,21 +249,23 @@ void outputList(node* _node, bool reverse, char format, char end) {
 	printf("%c", end);
 }
 
+//> Outputs array of pointers to list elements.
 void nodePointerArrayOutput(node** array) {
 	if (*array == NULL)
 		return;
 	
-	for (int i = 1; array[i - 1] != NULL; i++)
+	for (int i = 0; array[i] != NULL; i++)
 		printf("| #%d |  %s <- %s -> %s | \n", 
-			i, array[i - 1]->prev->data, array[i - 1]->data, array[i - 1]->next->data);
+			i + 1, array[i]->prev->data, array[i]->data, array[i]->next->data);
 }
 
-void outputToFile(FILE* f, node* _list)
+//> Saves list to file.
+void outputToFile(FILE* file, node* _list)
 {
-	if (f && (_list != NULL)) {
-		fprintf(f, "%s\n", _list->data); //we start from '_list->next' and to not break the 'for' loop, we write _list first.
+	if (file && (_list != NULL)) {
+		fprintf(file, "%s\n", _list->data); //we start from '_list->next' and to not break the 'for' loop, we write '_list' first.
 		for (node* iter = _list->next; iter != _list; iter = iter->next)
-			fprintf(f, "%s\n", iter->data);
+			fprintf(file, "%s\n", iter->data);
 	}
 }
 
@@ -265,7 +273,8 @@ void outputToFile(FILE* f, node* _list)
 // algos //
 //
 
-node** searchForNode(node* _node, char* data) {
+//> Outputs array of pointers to elements of given list, found by 'key' string.
+node** searchForNode(node* _node, char* key) {
 	int* length = new int{ 0 };
 
 	int* memory_size = new int{ 2 };
@@ -275,10 +284,14 @@ node** searchForNode(node* _node, char* data) {
 
 	node* iter = _node;
 	do {
-		if (strcmp(data, iter->data) == 0) {
+		if (strcmp(key, iter->data) == 0) {
 			found[(*length)++] = iter;
 			if (*length >= *memory_size) {
-				temp_array = new node * [(*memory_size) * 2]; //// ? C26451 ? ////
+
+#pragma warning(disable: 26451) //multiplying data got from pointer warning. Everything's fine.
+				temp_array = new node * [(*memory_size) * 2];
+#pragma warning(default: 26451)
+
 				for (int i = 0; i < *memory_size; i++)
 					temp_array[i] = found[i]; // moving current array to the next, with more space
 
@@ -301,7 +314,13 @@ node** searchForNode(node* _node, char* data) {
 	return found;
 }
 
-//'int elem' - input # of element, not index!
+//> Deletes elements, that are pointed by array of nodes.
+//Better input original 'list', where this array points to,
+//	to change the pointer you have on your list.
+//
+//	May be situation when you delete data on addres, that your list points to, so you can lost your list in the memory.
+//
+//! ! ! 'int elem' - input # of element, not index!
 void deleteNodeByArray(node** array, node** list, int elem) {
 	if (array == NULL || *array == NULL || list == NULL || *list == NULL)
 		return;
@@ -324,7 +343,7 @@ void deleteNodeByArray(node** array, node** list, int elem) {
 			else { deleteNode(&array[i - 1], true); return; } //changing our list pointer if it points to a pointer in a NodeArray to delete
 }
 
-
+//> Sorts the list based of 'strcmp_custom()'.
 void sortList(node* _list, bool descending) {
 	if (_list == NULL)
 		return;
@@ -337,8 +356,8 @@ void sortList(node* _list, bool descending) {
 	do {
 		jter = iter->next; //comparing from next after 'iter', to not delete it.
 		while (jter != iter) {
-			if (descending && strcmp(iter->data, jter->data) > 0) goto swap;
-			if (!descending && strcmp(iter->data, jter->data) < 0) goto swap;
+			if (descending && strcmp_custom(iter->data, jter->data) > 0) goto swap;
+			if (!descending && strcmp_custom(iter->data, jter->data) < 0) goto swap;
 
 			if (false) { 
 			swap: 
@@ -353,6 +372,7 @@ void sortList(node* _list, bool descending) {
 	} while (iter != _list); //iterating until we made a cycle in a list
 }
 
+//> Deletes duplicates from the list.
 void deleteDuplicates(node* _list) {
 	if (_list == NULL)
 		return;
@@ -375,6 +395,7 @@ void deleteDuplicates(node* _list) {
 	} while (iter != _list); //iterating until we made a cycle in a list
 }
 
+//> Outputs amount of elements in list.
 int countElements(node* _list) {
 	if (_list == NULL)
 		return 0;
@@ -391,14 +412,18 @@ int countElements(node* _list) {
 // other //
 //
 
+//> Outputs amount of elements in 'node' pointer array.
 int nodePointerArrayCount(node** array) {
 	int count = 0;
 	for (; array[count] != NULL; count++);
 	return count;
 }
 
-int strcmp_custom(char* str1, char* str2) {
-
+//> Compares two strings.
+//'-1':	str1 < str2
+//'0':	str1 = str2
+//'1':	str1 > str2
+int strcmp_custom(char* str1, char* str2) { // I didn't get info about how strcmp() actually works, so I wrote mine.
 	while (*str1 != '\0') {
 		if (*str2 == '\0')	return  0;
 		if (*str1 < *str2)	return -1;
