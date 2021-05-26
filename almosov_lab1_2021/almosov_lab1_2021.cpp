@@ -274,7 +274,6 @@ void output_menu() {
 int main()
 {
 	node* _list = NULL; // circular double linked list
-	char* word = NULL;	// input string
 	int num; //input int
 
 	output_menu();
@@ -284,7 +283,7 @@ menu:
 	switch (num)
 	{
 		// exit //
-	case 0: return 0;
+	case 0: deleteList(&_list); return 0;
 
 		// output menu //
 	case 1: output_menu(); goto menu;
