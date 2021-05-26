@@ -173,7 +173,7 @@ void output(node* _list) {
 
 	int num;
 
-	printf("> Reverse input?\n"
+	printf("> Reverse output?\n"
 		"1 - yes.\n"
 		"2 - no. \n"
 		"> Value: "), num = getNum();
