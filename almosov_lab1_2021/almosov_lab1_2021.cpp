@@ -251,6 +251,13 @@ fout:
 	return;
 }
 
+void output_prepare_menu() {
+	printf("> Avaliable commands\n"
+		"0 - exit program.\n"
+		"1 - output menu again.\n"
+		"2 - create list.\n"
+		"3 - clear console.\n");
+}
 void output_menu() {
 	printf("> Avaliable commands:\n"
 		"0 - exit program.\n"
@@ -273,8 +280,32 @@ void output_menu() {
 //> Basic interface for calling functions of the program. Main Function
 int main()
 {
-	node* _list = NULL; // circular double linked list
+	node* _list; // circular double linked list
 	int num; //input int
+
+	output_prepare_menu();
+prepare_menu:
+	printf("> Value: ");
+	num = getNum();
+	switch (num) {
+		// exit //
+	case 0: return 0;
+
+		// output menu //
+	case 1: output_prepare_menu(); goto prepare_menu;
+
+		// list create //
+	case 2: _list = NULL; printf("List is created!\n"); break;
+
+		// clear console //
+	case 3: system("CLS"); output_prepare_menu(); goto prepare_menu;
+
+		// err input //
+	default:
+		printf("> Wrong value! Try again.\n");
+		output_menu();
+		goto prepare_menu;
+	}
 
 	output_menu();
 menu:
@@ -283,7 +314,7 @@ menu:
 	switch (num)
 	{
 		// exit //
-	case 0: deleteList(&_list); return 0;
+	case 0: return 0;
 
 		// output menu //
 	case 1: output_menu(); goto menu;
@@ -296,17 +327,25 @@ menu:
 
 		// delete list //
 	case 4: if (_list != NULL) deleteList(&_list);
-		  else printf("List is empty!\n");
-		goto menu;
+		printf("List is deleted!\n");
+		output_prepare_menu();
+		goto prepare_menu;
 
 		// output data //
-	case 5: output(_list); goto menu;
+	case 5:
+		if (_list == NULL) { printf("List is empty!\n"); goto menu; }
+		output(_list); goto menu;
 
 		// delete duplicates //
-	case 6: deleteDuplicates(_list); goto menu;
+	case 6: 
+		if (_list == NULL) { printf("List is empty!\n"); goto menu; }
+		deleteDuplicates(_list);
+		goto menu;
 
 		// sort list //
 	case 7:
+		if (_list == NULL){ printf("List is empty!\n"); goto menu; }
+
 		printf("> Descending or Ascending Sort?!\n"
 			"0 - Descending.\n"
 			"1 - Ascending.\n"
@@ -325,7 +364,11 @@ menu:
 
 		// amount of elements //
 	case 9: printf("> Amount of elements: %d\n", countElements(_list)); goto menu;
+
+		// clear console //
 	case 10: system("CLS"); output_menu(); goto menu;
+
+		goto prepare_menu;
 
 		// err input //
 	default:
